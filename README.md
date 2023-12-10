@@ -1,5 +1,7 @@
 # **BIGFISH**
 
+## [GITHUB_LINK](https://github.com/WitherCOM/bigfish-uzleti-hf)
+
 ## **Infrastruktúra**
 A Business Intelligence stack megvalósításához docker-t és docker compose-t használtam. A compose-ban 5 darab konténer fut:
 - Metabase: A BI rendszer és dashboard megjelenítő oldal
@@ -67,7 +69,8 @@ A kollekciókba az adatokat transzformáció nélkül nyersen töltöttem be.
 
 ## ETL/ELT jobok
 
-ETL/ELT motornak a [Pentaho](https://www.hitachivantara.com/en-us/products/pentaho-plus-platform/data-integration-analytics.html) BI Stack [data intation](https://help.hitachivantara.com/Documentation/Pentaho/Data_Integration_and_Analytics/9.1/Products/Pentaho_Data_Integration) (régen Kettle) részét használtam. Ehhez tartozott a Pentaho Spoon nevű alkalmazás, aminek segítségével ezek a folyamatok grafikuson szerkeszthetők.
+ETL/ELT motornak a [Pentaho](https://www.hitachivantara.com/en-us/products/pentaho-plus-platform/data-integration-analytics.html) Bs in expense
+I Stack [data intation](https://help.hitachivantara.com/Documentation/Pentaho/Data_Integration_and_Analytics/9.1/Products/Pentaho_Data_Integration) (régen Kettle) részét használtam. Ehhez tartozott a Pentaho Spoon nevű alkalmazás, aminek segítségével ezek a folyamatok grafikuson szerkeszthetők.
 
 ### Job-ok és Transformációk
 A data integration-ben két folyamat elemet lehetett definiálni. Az egyik volt a job, amivel ütemezni lehet feladatokat, a másik volt a transformation, amivel az adatokat lehett betölteni, illetve általakítani. A következőkben az általam definiáltakat fogom bemutatni.
@@ -98,29 +101,41 @@ A mentett kategória nyers táblából kiszedetett információkat az OpenAI seg
 #### Staging táblák feltöltése
 Ebben a transzformációban a nyers táblákból lekért adatot a normalizált mariadb táblákba töltöm át a következő transzformáció segítségével
 
-![Expense/Income exportálása](./images/exp_inc_trans.png)
-Ebben a transzformációban lekérem a megfelelő tranzakciókat, azok közül is a legutolsó 60 napban történtet. Ezután illesztem a megfelelő árfolyammal, majd átszámítom az alapárfolyamba (az én esetemben a forintba) és kiírtam az expenses/invoices táblákba. Közben egy lookup table segítségével categoriát választottam a megfelelő tranzakció információhoz.
+![Staging táblák](./images/staging.png)
+Ebben a transzformációban lekérem a megfelelő tranzakciókat. Ezután illesztem a megfelelő árfolyammal, majd átszámítom az alapárfolyamba (az én esetemben a forintba) és kiírom táblákba. Közben egy lookup table segítségével kategoriát választottam a megfelelő tranzakció információhoz. Illetve beosztom, hogy ami income-nak számít az +, ami kiadásnak annak - előjele legyen. Ez a job 10 percenként fut.
 
-Ez a job 10 percenként fut.
-
-#### Balances exportálás
-
-![Balance exportálása](./images/balance_trans.png)
-Ez a job óránként fut a tranzackiók segítségével kiszámolja aktuálisan mennyi a a számla egyenleg, a megfelelő valutákat átállítja forintba.
-
-#### Categoriák generálása
-
-Egy ETL transzformáció lekéri az előre definiált kategóriákat, majd az összes tranzakció információt, ezen adatokat felhasználva az OpenAI segítéségvel sorolja be a tranzakciókat a különböző kategóriákba.
 
 
 ## Metabase
 A [Metabase](https://www.metabase.com/) egy self-hostolható business intelligence rendszer, amelyekkel interkaktív dashboardokat, majd belőlük pdf reportokat lehet készíteni.
 
+A Metabase-t úgy állítottam be, hogy a saját MariaDB-ben tárolja az adatait, ezért ehhez kiexportáltam a `scripts` mappába az aktuális állapotát ennek. Amit lefuttatva helyreállítható.
+```
+docker exec -i bigfish-mariadb-1 mariadb -pmariadb1234 < ./scripts/metabase.sql
+```
+A belépési adatok az admin felhasználóhoz:
+```
+email: teszt.elek@example.com
+password: admin1234
+```
+### Felépítés
+A Metabase különböző részekből áll. Vannak raw data source-ok, amiket az alapjai a model-eknek. A modellek adat lekérések, amiben fel lehet az oszlopokat meta adatokkal tagelni. Vannak Question-ök, amikkel ezekből a modellekből tudunk kérdezni és vizualizálni az adatot. Ezeket az elemeket tudjuk a Dashboard-ra felrakni.
+
+### Modellek
+Három modelt definiáltam, egyet a bevételre, egyed a kiadásokra és egyet ezek összehasonlítására.
+
+### Dashbord
+![Dashboard](./images/dashboard.png)
+Definiáltam egy dashboard-ot három füllel. Egy átfogó összefoglaltom a statisztikáról. És két darab -külön-külön tabot a bevételek és kiadások összegzésére.
 
 
-
+## Mi nem valósult meg?
+- Az excelből történő betöltés
+- A balances tábla feltöltése
+- Csalás felderítés
 
 ## További fejlesztési lehetőségek
 - Több féle banki Open Api bekötése, ezeknek egy közös job kialakítása
-- A Pentaho data integration lecserélése Apache Hop-ra (Ez modernebb és könnyebben kezelhető, több mindenre képes)
+- A Pentaho data integration lecserélése [Apache Hop](https://hop.apache.org/)-ra (Ez modernebb és könnyebben kezelhető, több mindenre képes)
+- Mariadb eliminálása és csak a mongodb használata
 
