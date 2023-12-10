@@ -1,0 +1,29 @@
+[entryPoints]
+  [entryPoints.http]
+    address = ":80"
+  [entryPoints.https]
+    address = ":443"
+    [entryPoints.https.http.tls]
+      certResolver = "letsencrypt"
+  [entryPoints.metrics]
+    address = ":8082"
+
+[log]
+  level = "ERROR"
+
+[providers.docker]
+  endpoint = "unix:///var/run/docker.sock"
+  exposedByDefault = false
+[providers.file]
+  directory = "/etc/traefik/configurations/"
+  watch = true
+[certificatesResolvers.letsencrypt.acme]
+  email = "test@example.com"
+  storage = "/etc/letsencrypt/acme.json"
+  [certificatesResolvers.letsencrypt.acme.tlsChallenge]
+
+[metrics]
+  [metrics.prometheus]
+    addEntryPointsLabels = true
+    addServicesLabels = true
+    entryPoint = "metrics"

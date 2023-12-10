@@ -1,0 +1,61 @@
+version: "3.7"
+
+
+volumes:
+  mariadb-data:
+  mongodb-data:
+  letsencrypt:
+  metabase:
+
+services:
+  mariadb:
+    image: docker.io/mariadb:11
+    ports:
+      - 127.0.0.1:3306:3306
+    environment:
+      MARIADB_ROOT_PASSWORD: mariadb1234
+    volumes:
+      - mariadb-data:/var/lib/mysql
+  mongodb:
+    image: docker.io/mongo
+    ports:
+      - 127.0.0.1:27017:27017
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: bigfish
+      MONGO_INITDB_ROOT_PASSWORD: bigfish
+  traefik:
+    image: docker.io/traefik:2.4
+    ports:
+      - 127.0.0.1:80:80
+      - 127.0.0.1:443:443
+      - 127.0.0.1:8082:8082
+    volumes:
+      - ./configurations/traefik:/etc/traefik:ro
+      - letsencrypt:/etc/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  bi:
+    image: docker.io/metabase/metabase
+    environment:
+      MB_DB_TYPE: mysql
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 3306
+      MB_DB_USER: metabase
+      MB_DB_PASS: metabase
+      MB_DB_HOST: mariadb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bi.rule=Host(`localhost`)"
+      - "traefik.http.routers.bi.entrypoints=https"
+      - "traefik.port=3000"
+  etl:
+    image: kettle
+    build:
+      context: kettle/image/.
+    volumes:
+      - ./kettle/jobs:/jobs:ro
+      - ./kettle/kettle.properties:/root/.kettle/kettle.properties
+
+  

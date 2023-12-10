@@ -1,0 +1,17 @@
+[http.middlewares]
+  [http.middlewares.redirect]
+    [http.middlewares.redirect.redirectScheme]
+      scheme = "https"
+
+[http.routers]
+  [http.routers.redirecttohttps]
+    entryPoints = ["http"]
+    middlewares = ["redirect"]
+    rule = "HostRegexp(`{host:.+}`)"
+    service = "noop"
+
+[http.services]
+  # noop service, the URL will be never called
+  [http.services.noop.loadBalancer]
+    [[http.services.noop.loadBalancer.servers]]
+      url = "http://192.168.0.1"
