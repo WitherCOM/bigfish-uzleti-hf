@@ -135,7 +135,15 @@ Definiáltam egy dashboard-ot három füllel. Egy átfogó összefoglaltom a sta
 - Csalás felderítés
 
 ## További fejlesztési lehetőségek
-- Több féle banki Open Api bekötése, ezeknek egy közös job kialakítása
-- A Pentaho data integration lecserélése [Apache Hop](https://hop.apache.org/)-ra (Ez modernebb és könnyebben kezelhető, több mindenre képes)
-- Mariadb eliminálása és csak a mongodb használata
+- Egyéb Open Banking API, illetve PSD2 api-k bekötése (pl.: OTP)
+
+- A Pentaho Data Integration(Kettle) lecserélése [Apache Hop](https://hop.apache.org/)-ra
+  - A Kettle-t régen sokan használták, de manapság egyre kevésbé fejlesztik
+  - Nagyobb flexibilitással bír, a Kettle egy forkjából alakult ki, aktívan fejlesztik
+- Metabase lecserélése Apache Superset-re
+  - Kód alapú dashboard fejlesztés (de van vizuális editor is) -> könnyebb a dokumentálása és mentése
+  - Több beépített grafikon, illetve lehetőség saját készítésére
+  - lightweight
+- Csalás detektálás
+  - Fizetések elemézése, hogy nincs-e valami gyanús kiadás, vagy ismétődő
 
